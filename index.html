@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaylı Sarkaç Simülasyonu</title>
+   <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px; /* Kenar boşluğu eklendi */
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: row;
+            /* DÜZELTME: Masaüstü için maksimum genişlik eklendi */
+            max-width: 1200px; 
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .controls {
+            /* Genişlik 320px olarak güncellendi (orijinal hali) */
+            width: 320px;
+            flex-shrink: 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 24px;
+        
+		
+            font-weight: 600;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        button.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        button.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        button.secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .checkbox-group {
+            margin-bottom: 25px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .checkbox-label input {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .input-with-unit {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .unit {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            min-width: 40px;
+        }
+
+        .radio-group {
+            margin-top: 25px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .radio-option input {
+            margin-right: 10px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .radio-option label {
+            margin: 0;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .canvas-area {
+            flex: 1; /* Orijinal flex: 1 olarak güncellendi */
+            min-width: 0;
+            padding: 10px;
+            display: flex;
+         
+            justify-content: center;
+            background: #ffffff;
+            overflow: hidden; 
+        }
+
+        canvas {
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+   
+        
+        /* * DÜZELTME: @media (min-width: 801px) bloğu, 
+         * kayma sorununa yol açtığı için kaldırıldı.
+         */
+
+        /* Mobil (kaydırmalı) görünüm KORUNDU */
+        @media (max-width: 800px) {
+            /* padding: 0 ve min-height: 0 eklendi */
+            body {
+                padding: 0;
+                min-height: 0;
+            }
+            .container {
+                flex-direction: column; 
+                width: 100%;
+                height: auto; 
+                border-radius: 0; /* Mobilde tam ekran */
+            }
+            
+            .controls {
+                flex-basis: auto; 
+                width: 100%; 
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
+            }
+            
+            .canvas-area {
+                border-left: none; 
+                width: 100%;
+                /* ANAHTAR: Yatay kaydırmayı etkinleştir */
+                overflow-x: auto; 
+                /* ANAHTAR: Kaydırmanın çalışması için içeriği sola hizala */
+                justify-content: flex-start;
+                align-items: flex-start;
+                padding: 20px; /* Mobilde padding azaltıldı */
+            }
+            
+            canvas {
+                /* ANAHTAR: Canvas'ı 540x400'e sabitle (mobil kaydırmayı zorla) */
+                width: 540px;
+                max-width: 540px; /* max-width: 100% 'ü ezer */
+                height: 400px; 
+            }
+			
+			.input-group {
+    margin-bottom: 10px;
+    /* YENİ EKLENENLER */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+}
+
+label {
+    /* display: block; KALDIRILDI */
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    /* margin-bottom: 8px; KALDIRILDI */
+    /* YENİ EKLENENLER */
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+  .checkbox-group {
+            margin-bottom: 15px;
+        }
+}
+
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="controls">
+            
+            <h1></h1>
+
+            <div class="button-group">
+                <button class="primary" id="WF19_bu2">Başlat</button>
+                <button class="secondary" id="WF19_bu1">Geri</button>
+            </div>
+
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="WF19_cbSlow">
+                    Ağır çekim
+                </label>
+            </div>
+            
+            <div class="input-group">
+                <label for="WF19_ipD">Yay sabiti:</label>
+                <div class="input-with-unit">
+                    <input type="text" id="WF19_ipD" value="20,0">
+                    <span class="unit">N/m</span>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="WF19_ipM">Kütle:</label>
+                <div class="input-with-unit">
+                    <input type="text" id="WF19_ipM" value="5,00">
+                    <span class="unit">kg</span>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="WF19_ipG">Yer çekimi ivmesi:</label>
+                <div class="input-with-unit">
+                    <input type="text" id="WF19_ipG" value="9,81">
+                    <span class="unit">m/s²</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="WF19_ipA">Genlik:</label>
+                <div class="input-with-unit">
+                    <input type="text" id="WF19_ipA" value="0,0500">
+                    <span class="unit">m</span>
+                </div>
+            </div>
+
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" id="WF19_rbY" name="bg" value="on" checked>
+                    <label for="WF19_rbY" style="color:#ff0000">Uzama (yer değiştirme)</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="WF19_rbV" name="bg" value="on">
+                    <label for="WF19_rbV" style="color:#C3C800">Hız</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="WF19_rbA" name="bg" value="on">
+                    <label for="WF19_rbA" style="color: #82cea4;">İvme</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="WF19_rbF" name="bg" value="on">
+                    <label for="WF19_rbF" style="color:#9999FF">Kuvvet</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="WF19_rbE" name="bg" value="on">
+                    <label for="WF19_rbE" style="color:#000000">Enerji</label>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="canvas-area">
+            <canvas width="540" height="400" id="WF19_cv">HTML5-Canvas desteklenmiyor!</canvas>
+        </div>
+    </div>
+        
+    <script>
+        document.addEventListener("DOMContentLoaded", Federpendel(), false);
+        
+        function Federpendel() {
+        
+            // Federpendel, TÜRKÇE METİNLER
+            var text01 = ["Başlat", "Duraklat", "Devam"];
+            var text02 = "Maksimum";
+            var text03 = "Uzama";
+            var text04 = "Hız";
+            var text05 = "İvme";
+            var text06 = "Kuvvet";
+            var text07 = "Potansiyel + Esneklik Enerjisi";
+            var text08 = "Kinetik Enerji";
+            var text09 = "Toplam Enerji";
+            var text10 = "(s)"; // "in s" -> "(saniye)"
+            var text11 = "(metre)"; // "in m" -> "(metre)"
+            var text12 = "m/s";
+            var text13 = "m/s\u00b2";
+            var text14 = "N";
+            var text15 = "J";
+            var text16 = "Salınım süresi"; // "Schwingungsdauer"
+        
+            var decimalSeparator = ","; 
+            var symbolTime = "t"; 
+            var symbolElongation = "s"; 
+            var symbolVelocity = "v"; 
+            var symbolAcceleration = "a"; 
+            var symbolForce = "F"; 
+            var symbolEnergy = "E"; 
+            var symbolPotential = "pot"; 
+            var symbolKinetic = "kin"; 
+            var second = "a"; 
+            var meter = "m"; 
+            var meterPerSecond = "m/s"; 
+            var meterPerSecond2 = "m/s\u00b2"; 
+            var newton = "N"; 
+            var joule = "J"; 
+        
+            var colorClock1 = "#808080"; 
+            var colorClock2 = "#000000"; 
+            var colorClock3 = "#ff0000"; 
+            var colorElongation = "#ff0000"; 
+            var colorVelocity = "#C3C800"; 
+            var colorAcceleration = "#5A145A"; 
+            var colorForce = "#7FBCFF"; 
+            var colorBody = "#ffffff"; 
+        
+            var FONT1 = "normal normal bold 12px sans-serif"; 
+            var ax = 100, ay = 50; 
+            var py0 = 180; 
+            var xD = 250, yD1 = py0, yD2 = 160;
+            var tPix = 25; 
+        
+            var canvas, ctx; 
+            var width, height; 
+            var bu1, bu2; 
+            var cbSlow; 
+            var ipD, ipM, ipG, ipA; 
+            var rbY, rbV, rbA, rbF, rbE; 
+            var on; 
+            var slow; 
+            var t0; 
+            var t; 
+            var tU; 
+            var timer; 
+            var D; 
+            var m; 
+            var g; 
+            var A; 
+            var omega; 
+            var T; 
+            var phi, sinPhi, cosPhi; 
+            var yPix; 
+            var py; 
+            var nrSize; 
+        
+            start();
+        
+            function start() {
+                canvas = document.getElementById("WF19_cv"); 
+                width = canvas.width;
+                height = canvas.height; 
+                ctx = canvas.getContext("2d"); 
+                bu1 = document.getElementById("WF19_bu1"); 
+                bu2 = document.getElementById("WF19_bu2"); 
+                bu2.state = 0; 
+                cbSlow = document.getElementById("WF19_cbSlow"); 
+                cbSlow.checked = false; 
+                ipD = document.getElementById("WF19_ipD"); 
+                ipM = document.getElementById("WF19_ipM"); 
+                ipG = document.getElementById("WF19_ipG"); 
+                ipA = document.getElementById("WF19_ipA"); 
+                rbY = document.getElementById("WF19_rbY"); 
+                rbY.checked = true; 
+                rbV = document.getElementById("WF19_rbV"); 
+                rbA = document.getElementById("WF19_rbA"); 
+                rbF = document.getElementById("WF19_rbF"); 
+                rbE = document.getElementById("WF19_rbE"); 
+        
+                D = 20; 
+                m = 5; 
+                g = 9.81; 
+                A = 0.05; 
+        
+                updateInput(); 
+                calculation(); 
+        
+                on = false; 
+                slow = false; 
+                t = tU = 0; 
+        
+                bu1.onclick = reactionReset; 
+                bu2.onclick = reactionStart; 
+                cbSlow.onclick = reactionSlow; 
+                ipD.onkeydown = reactionEnter; 
+                ipM.onkeydown = reactionEnter; 
+                ipG.onkeydown = reactionEnter; 
+                ipA.onkeydown = reactionEnter; 
+                rbY.onclick = reactionRadioButton; 
+                rbV.onclick = reactionRadioButton; 
+                rbA.onclick = reactionRadioButton; 
+                rbF.onclick = reactionRadioButton; 
+                rbE.onclick = reactionRadioButton; 
+                nrSize = 0; 
+                paint(); 
+        
+            } 
+        
+            function setButton2State(st) {
+                bu2.state = st; 
+                bu2.innerHTML = text01[st]; 
+            }
+        
+            function switchButton2() {
+                var st = bu2.state; 
+                if (st == 0) st = 1; 
+                else st = 3 - st; 
+                setButton2State(st); 
+            }
+        
+            function enableInput(p) {
+                ipD.readOnly = !p; 
+                ipM.readOnly = !p; 
+                ipG.readOnly = !p; 
+                ipA.readOnly = !p; 
+            }
+        
+            function reactionReset() {
+                setButton2State(0); 
+                enableInput(true); 
+                stopAnimation(); 
+                t = tU = 0; 
+                on = false; 
+                slow = cbSlow.checked; 
+                reaction(); 
+                paint(); 
+            }
+        
+            function reactionStart() {
+                if (bu2.state != 1) t0 = new Date(); 
+                switchButton2(); 
+                enableInput(false); 
+                if (bu2.state == 1) startAnimation(); 
+                else stopAnimation(); 
+                slow = cbSlow.checked; 
+                reaction(); 
+                paint(); 
+            }
+        
+            function reactionSlow() {
+                slow = cbSlow.checked; 
+            }
+        
+            function reaction() {
+                input(); 
+                calculation(); 
+            }
+        
+            function reactionEnter(e) {
+                if (e.key && String(e.key) == "Enter" 
+                    ||
+                    e.keyCode == 13) 
+                    reaction(); 
+                paint(); 
+            }
+        
+            function reactionRadioButton() {
+                if (rbY.checked) nrSize = 0; 
+                else if (rbV.checked) nrSize = 1; 
+                else if (rbA.checked) nrSize = 2; 
+                else if (rbF.checked) nrSize = 3; 
+                else nrSize = 4; 
+                paint(); 
+            }
+        
+            function startAnimation() {
+                on = true; 
+                timer = setInterval(paint, 40); 
+                t0 = new Date(); 
+            }
+        
+            function stopAnimation() {
+                on = false; 
+                clearInterval(timer); 
+            }
+        
+            function calculation() {
+                omega = Math.sqrt(D / m); 
+                T = 2 * Math.PI / omega; 
+            }
+        
+            function ToString(n, d, fix) {
+                var s = (fix ? n.toFixed(d) : n.toPrecision(d)); 
+                return s.replace(".", decimalSeparator); 
+            }
+        
+            function inputNumber(ef, d, fix, min, max) {
+                var s = ef.value; 
+                s = s.replace(",", "."); 
+                var n = Number(s); 
+                if (isNaN(n)) n = 0; 
+                if (n < min) n = min; 
+                if (n > max) n = max; 
+                ef.value = ToString(n, d, fix); 
+                return n; 
+            }
+        
+            function input() {
+                D = inputNumber(ipD, 3, false, 5, 50); 
+                m = inputNumber(ipM, 3, false, 1, 10); 
+                g = inputNumber(ipG, 3, false, 1, 100); 
+                A = inputNumber(ipA, 3, false, 0.01, 0.1); 
+            }
+        
+            function updateInput() {
+                ipD.value = ToString(D, 3, false); 
+                ipM.value = ToString(m, 3, false); 
+                ipG.value = ToString(g, 3, false); 
+                ipA.value = ToString(A, 3, false); 
+            }
+        
+            function newPath() {
+                ctx.beginPath(); 
+                ctx.strokeStyle = "#000000"; 
+                ctx.lineWidth = 1; 
+            }
+        
+            function line(x1, y1, x2, y2, c, w) {
+                newPath(); 
+                if (c) ctx.strokeStyle = c; 
+                if (w) ctx.lineWidth = w; 
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2); 
+                ctx.stroke(); 
+            }
+        
+            function arrow(x1, y1, x2, y2, w) {
+                if (!w) w = 1; 
+                var dx = x2 - x1,
+                    dy = y2 - y1; 
+                var length = Math.sqrt(dx * dx + dy * dy); 
+                if (length == 0) return; 
+                dx /= length;
+                dy /= length; 
+                var s = 2.5 * w + 7.5; 
+                var xSp = x2 - s * dx,
+                    ySp = y2 - s * dy; 
+                var h = 0.5 * w + 3.5; 
+                var xSp1 = xSp - h * dy,
+                    ySp1 = ySp + h * dx; 
+                var xSp2 = xSp + h * dy,
+                    ySp2 = ySp - h * dx; 
+                xSp = x2 - 0.6 * s * dx;
+                ySp = y2 - 0.6 * s * dy; 
+                ctx.beginPath(); 
+                ctx.lineWidth = w; 
+                ctx.moveTo(x1, y1); 
+                if (length < 5) ctx.lineTo(x2, y2); 
+                else ctx.lineTo(xSp, ySp); 
+                ctx.stroke(); 
+                if (length < 5) return; 
+                ctx.beginPath(); 
+                ctx.lineWidth = 1; 
+                ctx.fillStyle = ctx.strokeStyle; 
+                ctx.moveTo(xSp, ySp); 
+                ctx.lineTo(xSp1, ySp1); 
+                ctx.lineTo(x2, y2); 
+                ctx.lineTo(xSp2, ySp2); 
+                ctx.closePath(); 
+                ctx.fill(); 
+            }
+        
+            function rectangle(x, y, w, h, c) {
+                if (c) ctx.fillStyle = c; 
+                newPath(); 
+                ctx.fillRect(x, y, w, h); 
+                ctx.strokeRect(x, y, w, h); 
+            }
+        
+            function circle(x, y, r, c) {
+                if (c) ctx.fillStyle = c; 
+                newPath(); 
+                ctx.arc(x, y, r, 0, 2 * Math.PI, true); 
+                ctx.fill(); 
+                ctx.stroke(); 
+            }
+        
+            function spring() {
+                var per = (py - ay - 25) / 10.0; 
+                var ampl = 10; 
+                var omega = 2 * Math.PI / per; 
+                newPath(); 
+                ctx.moveTo(ax, ay + 10); 
+                for (var y = ay + 11; y <= py - 15; y++) { 
+                    var x = ax + ampl * Math.sin(omega * (y - ay - 10)); 
+                    if (y > py - 16) x = Math.max(x, ax); 
+                    ctx.lineTo(x, y); 
+                }
+                ctx.stroke(); 
+            }
+        
+            function springpendulum() {
+                rectangle(ax - 50, ay - 5, 100, 5, "#000000"); 
+                line(ax, ay, ax, ay + 10); 
+                spring(); 
+                line(ax, py - 15, ax, py - 5); 
+                circle(ax, py, 5, colorBody); 
+                line(ax - 40, py0, ax - 20, py0); 
+                line(ax + 20, py0, ax + 40, py0); 
+            }
+        
+            function clock(x, y) {
+                rectangle(x - 60, y - 16, 120, 32, colorClock1); 
+                rectangle(x - 50, y - 10, 100, 20, colorClock2); 
+                ctx.fillStyle = "#ff0000"; 
+                ctx.font = "normal normal bold 16px monospace"; 
+                ctx.textAlign = "center"; 
+                var n = Math.floor(t / 1000); 
+                var s = (t - n * 1000).toFixed(3) + " " + second; 
+                s = s.replace(".", decimalSeparator); 
+                while (s.length < 9) s = " " + s; 
+                ctx.fillText(s, x, y + 5); 
+            }
+        
+            function alignText(s, t, x, y) {
+                ctx.font = FONT1; 
+                if (t == 0) ctx.textAlign = "left"; 
+                else if (t == 1) ctx.textAlign = "center"; 
+                else ctx.textAlign = "right"; 
+                ctx.fillText(s, x, y); 
+            }
+        
+            function horizontalAxis(x, y) {
+                ctx.strokeStyle = "#000000"; 
+                var axisLength = width - x - 20; 
+                arrow(x - 20, y, x + axisLength, y); 
+                alignText(symbolTime, 1, x + axisLength - 10, y + 15); 
+                alignText(text10, 1, x + axisLength - 10, y + 27); 
+                var t0 = Math.ceil(tU); 
+                var x0 = Math.round(x + tPix * (t0 - tU)); 
+                for (var i = 0; i <= 20; i++) { 
+                    var xs = x0 + i * tPix; 
+                    if (xs > x + axisLength + 5) break; 
+                    ctx.moveTo(xs, y - 3);
+                    ctx.lineTo(xs, y + 3); 
+                    if (xs >= x + 5 && xs <= x + axisLength - 5 
+                        &&
+                        (t0 + i <= 100 || (t0 + i) % 2 == 0)) 
+                        alignText("" + (t0 + i), 1, xs, y + 13); 
+                }
+                ctx.stroke(); 
+            }
+        
+            function verticalAxis(x, y, yLow, yHigh, maxSI) {
+                var pot10 = Math.pow(10, Math.floor(Math.log(maxSI) / Math.LN10)); 
+                var q = maxSI / pot10; 
+                var n; 
+                if (q > 5) n = 10;
+                else if (q > 2) n = 5;
+                else n = 2; 
+                ctx.strokeStyle = "#000000"; 
+                arrow(x, yLow, x, yHigh); 
+                var n0 = (nrSize < 4 ? -n : 0); 
+                ctx.beginPath(); 
+                for (var i = n0; i <= n; i++) { 
+                    var ys = y - i * 100 / n; 
+                    ctx.moveTo(x - 3, ys);
+                    ctx.lineTo(x + 3, ys); 
+                    var s = Number(i * pot10).toPrecision(1); 
+                    if (Math.abs(i * pot10) >= 10) 
+                        s = "" + Math.round(i * pot10); 
+                    s = s.replace(".", decimalSeparator); 
+                    if ((n < 10 || i % 2 == 0) && i != 0) 
+                        alignText(s, 2, x - 3, ys + 4); 
+                }
+                ctx.stroke(); 
+                yPix = 100 / n / pot10; 
+            }
+        
+            function sinus(x, y, per, ampl, xMin, xMax) {
+                var omega = 2 * Math.PI / per; 
+                newPath(); 
+                var xx = xMin; 
+                ctx.moveTo(xx, y - ampl * Math.sin(omega * (xx - x))); 
+                while (xx < xMax) { 
+                    xx++; 
+                    ctx.lineTo(xx, y - ampl * Math.sin(omega * (xx - x))); 
+                }
+                ctx.stroke(); 
+            }
+        
+            function diagram(type, x, y, yMax) {
+                horizontalAxis(x, y); 
+                verticalAxis(x, y, y + 120, y - 135, yMax); 
+                var xMax = x + (width - x - 20); 
+                sinus(x - type * T * 5 - tU * tPix, y, T * tPix, yMax * yPix, x, xMax); 
+            }
+        
+            function drawMomVal(val, x, y, c) {
+                x += (t - tU) * tPix;
+                y -= val * yPix; 
+                var xMax = xD + (width - xD - 20); 
+                if (x > xMax) return; 
+                circle(x, y, 2, c); 
+            }
+        
+            function writeValue(s, v, u, n, x1, x2, y) {
+                alignText(s + ":", 0, x1, y); 
+                s = v.toPrecision(n); 
+                s = s.replace(".", decimalSeparator); 
+                alignText(s + " " + u, 0, x2, y); 
+            }
+        
+            function drawElongation() {
+                var s = A * cosPhi; 
+                diagram(1, xD, yD1, A); 
+                alignText("x", 1, xD - 25, yD1 - 130); 
+                alignText("(m)", 1, xD - 25, yD1 - 118); 
+                line(ax, py0, ax, py, colorElongation, 3); 
+                drawMomVal(s, xD, yD1, colorElongation); 
+                ctx.fillStyle = colorElongation; 
+                writeValue(text03, s, meter, 4, xD + 10, xD + 120, height - 50); 
+                writeValue("(" + text02, A, meter + ")", 4, xD + 10, xD + 120, height - 30); 
+            }
+        
+            function drawVelocity() {
+                var vMax = A * omega; 
+                var v = -vMax * sinPhi; 
+                diagram(2, xD, yD1, vMax); 
+                alignText(symbolVelocity, 1, xD - 28, yD1 - 130); 
+                alignText(text12, 1, xD - 28, yD1 - 118); 
+                ctx.strokeStyle = colorVelocity; 
+                arrow(ax, py, ax, py - v * yPix, 3); 
+                drawMomVal(v, xD, yD1, colorVelocity); 
+                var mps = meterPerSecond; 
+                writeValue(text04, v, mps, 3, xD + 10, xD + 120, height - 50); 
+                writeValue("(" + text02, vMax, mps + ")", 3, xD + 10, xD + 120, height - 30); 
+            }
+        
+            function drawAcceleration() {
+                var aMax = A * omega * omega; 
+                var a = -aMax * cosPhi; 
+                diagram(3, xD, yD1, aMax); 
+                alignText(symbolAcceleration, 1, xD - 28, yD1 - 130); 
+                alignText(text13, 1, xD - 28, yD1 - 118); 
+                ctx.strokeStyle = colorAcceleration; 
+                arrow(ax, py, ax, py - a * yPix, 3); 
+                drawMomVal(a, xD, yD1, colorAcceleration); 
+                var mps2 = meterPerSecond2; 
+                writeValue(text05, a, mps2, 3, xD + 10, xD + 120, height - 50); 
+                writeValue("(" + text02, aMax, mps2 + ")", 3, xD + 10, xD + 120, height - 30); 
+            }
+        
+            function drawForce() {
+                var fMax = m * A * omega * omega; 
+                var f = -fMax * cosPhi; 
+                diagram(3, xD, yD1, fMax); 
+                alignText(symbolForce, 1, xD - 28, yD1 - 130); 
+                alignText(text14, 1, xD - 28, yD1 - 118); 
+                ctx.strokeStyle = colorForce; 
+                arrow(ax, py, ax, py - f * yPix, 3); 
+                drawMomVal(f, xD, yD1, colorForce); 
+                writeValue(text06, f, newton, 3, xD + 10, xD + 120, height - 50); 
+                writeValue("(" + text02, fMax, newton + ")", 3, xD + 10, xD + 120, height - 30); 
+            }
+        
+            function diagramEnergy(x, y, e) {
+                horizontalAxis(x, y); 
+                verticalAxis(x, y, y + 20, y - 125, e); 
+                var x1 = x + (width - x - 20); 
+                var y1 = y - e * yPix; 
+                ctx.beginPath(); 
+                ctx.moveTo(x, y1);
+                ctx.lineTo(x1, y1); 
+                ctx.stroke(); 
+                var xx = x - tU * tPix; 
+                var per = T * 10; 
+                var ampl = e * yPix / 2; 
+                sinus(xx - T * 2.5, y - ampl, per, ampl, x, x1); 
+                sinus(xx - T * 7.5, y - ampl, per, ampl, x, x1); 
+            }
+        
+            function centerTextIndex(s1, s2, x, y) {
+                var w1 = ctx.measureText(s1).width; 
+                var w2 = ctx.measureText(s2).width; 
+                var x0 = x - (w1 + w2) / 2; 
+                alignText(s1, 0, x0, y); 
+                alignText(s2, 0, x0 + w1 + 1, y + 5); 
+            }
+        
+            function drawEnergy() {
+                var e = A * omega;
+                e = m * e * e / 2; 
+                var part = cosPhi * cosPhi; 
+                var eP = e * part,
+                    eK = e - eP; 
+                diagramEnergy(xD, yD2, e); 
+                centerTextIndex(symbolEnergy, symbolPotential, xD - 30, yD2 - 125); 
+                alignText(text15, 1, xD - 30, yD2 - 108); 
+                centerTextIndex(symbolEnergy, symbolKinetic, xD + 30, yD2 - 125); 
+                alignText(text15, 1, xD + 30, yD2 - 108); 
+                ctx.fillStyle = colorElongation; 
+                writeValue(text07, eP, joule, 3, xD, xD + 200, height - 70); 
+                ctx.fillStyle = colorVelocity; 
+                writeValue(text08, eK, joule, 3, xD, xD + 200, height - 50); 
+                ctx.fillStyle = "#000000"; 
+                writeValue(text09, e, joule, 3, xD, xD + 200, height - 30); 
+                
+                var barX = ax + 100; 
+                var barY = 205;
+                var barW = 30; 
+                
+                rectangle(barX, barY, barW, 100, "#EEEEEE"); 
+                
+                var dy = part * 100; 
+                rectangle(barX, barY, barW, dy, colorElongation); 
+                if (part > 0.001 || on) 
+                    alignText(text07, 0, barX + barW + 10, barY + 20); 
+                rectangle(barX, barY + dy, barW, 100 - dy, colorVelocity); 
+                if (part < 0.999 || on) 
+                    alignText(text08, 0, barX + barW + 10, barY + 80); 
+                
+                drawMomVal(eP, xD, yD2, colorElongation); 
+                drawMomVal(eK, xD, yD2, colorVelocity); 
+            }
+        
+            function paint() {
+                ctx.clearRect(0, 0, width, height); 
+                ctx.font = FONT1; 
+                if (on) { 
+                    var t1 = new Date(); 
+                    var dt = (t1 - t0) / 1000; 
+                    if (slow) dt /= 10; 
+                    t += dt; 
+                    t0 = t1; 
+                    var tMaxGrafik = (width - xD - 20) / tPix; 
+                    tU = (t < tMaxGrafik ? 0 : t - tMaxGrafik); 
+                }
+                phi = omega * t; 
+                cosPhi = Math.cos(phi);
+                sinPhi = Math.sin(phi); 
+                py = py0 - 500 * A * cosPhi; 
+                springpendulum(); 
+                clock(ax, 340); 
+                switch (nrSize) { 
+                    case 0:
+                        drawElongation();
+                        break; 
+                    case 1:
+                        drawVelocity();
+                        break; 
+                    case 2:
+                        drawAcceleration();
+                        break; 
+                    case 3:
+                        drawForce();
+                        break; 
+                    case 4:
+                        drawEnergy();
+                        break; 
+                }
+                var s = text16 + ":  " + T.toPrecision(3) + " " + second; 
+                s = s.replace(".", decimalSeparator); 
+                ctx.fillStyle = "#000000"; 
+                alignText(s, 1, ax, height - 30); 
+            }
+        }
+    </script>
+
+</body>
+</html>
